@@ -1,61 +1,58 @@
 #!/usr/bin/env python3
-"""Generate the favicon set: a thick, block-letter "NAH" stretched to fill the square."""
-import math
-from PIL import Image, ImageDraw
+"""Generate the favicon set: a modern white "NAH" wordmark on a black backing."""
+from PIL import Image, ImageDraw, ImageFont
 
-WHITE = (255, 255, 255)
+FONT_PATH = '/usr/share/fonts/truetype/ubuntu/UbuntuSans[wdth,wght].ttf'
+FALLBACK = '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf'
+TEXT = 'NAH'
 BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
 
 S = 512            # master canvas (px)
-M = 16             # thin white border (px on the master)
-STEM = 52          # stroke thickness
+FILL = 0.78        # fraction of the square the word occupies
 
 
-def thick_segment(p, q, t):
-    """Four corners of a `t`-thick segment from p to q (a parallelogram)."""
-    dx, dy = q[0] - p[0], q[1] - p[1]
-    length = math.hypot(dx, dy) or 1.0
-    nx, ny = -dy / length, dx / length
-    hx, hy = nx * t / 2, ny * t / 2
-    return [
-        (p[0] + hx, p[1] + hy),
-        (p[0] - hx, p[1] - hy),
-        (q[0] - hx, q[1] - hy),
-        (q[0] + hx, q[1] + hy),
-    ]
+def load_font(size: int) -> ImageFont.FreeTypeFont:
+    """Ubuntu Sans, normal width + extra bold, with fallback."""
+    try:
+        font = ImageFont.truetype(FONT_PATH, size)
+        values = []
+        for a in font.get_variation_axes():
+            name = a['name']
+            if isinstance(name, bytes):
+                name = name.decode('ascii', 'replace')
+            key = name.lower()
+            if 'width' in key or key == 'wdth':
+                values.append(100)     # normal width
+            elif 'weight' in key or key == 'wght':
+                values.append(800)     # extra bold
+            else:
+                values.append(a['default'])
+        font.set_variation_by_axes(values)
+        return font
+    except Exception:
+        return ImageFont.truetype(FALLBACK, size)
 
 
 def draw_master() -> Image.Image:
-    img = Image.new('RGB', (S, S), WHITE)
+    img = Image.new('RGB', (S, S), BLACK)
     d = ImageDraw.Draw(img)
 
-    top, bottom = M, S - M       # 16, 496
-    H = bottom - top             # 480
-    W = H // 3                   # 160 per letter — letters touch at their edges
-    t = STEM
-    mid = top + H // 2           # vertical center
+    # Largest font whose "NAH" still fits within FILL of the square.
+    target = int(S * FILL)
+    font = load_font(S)
+    for size in range(S, 40, -1):
+        f = load_font(size)
+        l, t, r, b = d.textbbox((0, 0), TEXT, font=f)
+        if (r - l) <= target:
+            font = f
+            break
 
-    x0 = M
-
-    # N — two stems + a top-left -> bottom-right diagonal.
-    nx0 = x0
-    d.polygon(thick_segment((nx0 + t, top), (nx0 + W - t, bottom), t), fill=BLACK)
-    d.rectangle([nx0, top, nx0 + t, bottom], fill=BLACK)
-    d.rectangle([nx0 + W - t, top, nx0 + W, bottom], fill=BLACK)
-
-    # A — vertical legs, a flat top bar, and a crossbar (squared "A").
-    ax0 = x0 + W
-    d.rectangle([ax0, top, ax0 + t, bottom], fill=BLACK)
-    d.rectangle([ax0 + W - t, top, ax0 + W, bottom], fill=BLACK)
-    d.rectangle([ax0, top, ax0 + W, top + t], fill=BLACK)
-    d.rectangle([ax0, mid - t // 2, ax0 + W, mid + t // 2], fill=BLACK)
-
-    # H — two stems + a crossbar.
-    hx0 = x0 + 2 * W
-    d.rectangle([hx0, top, hx0 + t, bottom], fill=BLACK)
-    d.rectangle([hx0 + W - t, top, hx0 + W, bottom], fill=BLACK)
-    d.rectangle([hx0, mid - t // 2, hx0 + W, mid + t // 2], fill=BLACK)
-
+    l, t, r, b = d.textbbox((0, 0), TEXT, font=font)
+    w, h = r - l, b - t
+    x = (S - w) / 2 - l
+    y = (S - h) / 2 - t
+    d.text((x, y), TEXT, fill=WHITE, font=font)
     return img
 
 
