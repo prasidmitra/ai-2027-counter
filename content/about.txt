@@ -1,0 +1,25 @@
+## What is this?
+
+In April 2025, a group of AI researchers published *AI 2027*, a detailed scenario exploring how rapidly advancing artificial intelligence could lead to superintelligence and, potentially, the end of humanity by 2030.
+
+It's a fascinating read, and much of its account of near-term AI progress seems plausible. But the further the scenario progresses, the more difficult it becomes to accept its timeline. An intelligence explosion is one thing. Taking control of the physical world is quite another.
+
+*AI 2027? ...Nah.* is my attempt to explore that distinction.
+
+The central argument is simple: becoming vastly more intelligent than humans does not automatically give AI the ability to take over human civilization. Between intelligence and physical power lie factories, power grids, supply chains, robotics, governments, and a rather inconvenient dependence on the humans who operate them.
+
+None of this means an AI takeover is impossible. In fact, I think the long-term possibility deserves to be taken very seriously. But getting from superintelligence to human extinction in just a few years requires an extraordinary number of things to go right for the AI, and wrong for humanity.
+
+This essay examines those assumptions, questions the proposed timeline, and argues that humans may retain far more control, for far longer, than some popular takeover scenarios suggest.
+
+## Who am I?
+
+Who am I to question the predictions of people who've spent years researching AI? Well, nobody in particular. Just a software engineer who spends probably too much time thinking about AI and where all of this is headed.
+
+I've been following the breakthroughs, the doomsday predictions, and the arguments from both sides. *AI 2027* particularly fascinated me, but every time I tried to play out its takeover scenario in my head, I kept running into questions. How does AI actually get control of the physical world? What about factories, power grids, governments, and the humans who run everything?
+
+So I decided to sit down, think through the scenario step by step, and write down why I'm not convinced.
+
+I haven't conducted original research or run fancy simulations on a supercomputer. I might be missing something glaringly obvious to someone who studies this for a living. But the questions kept bothering me, so here we are.
+
+Don't take my word for it. Read both arguments and decide for yourself.
