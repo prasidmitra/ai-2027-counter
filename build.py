@@ -325,7 +325,7 @@ page = f'''<!DOCTYPE html>
     <main class="article">
       <header class="site-header">
         <h1 class="site-title"><a href="#">{meta['main']}</a></h1>
-        <p class="author">Prasid&nbsp;Mitra</p>
+        <p class="author">Prasid&nbsp;Mitra <span class="author-sep">|</span> <a class="linkedin-link" href="https://www.linkedin.com/in/prasidmitra/" target="_blank" rel="noopener" aria-label="Prasid Mitra on LinkedIn"><img src="linkedin.webp" alt="LinkedIn" width="18" height="18" /></a></p>
       </header>
 
 {lede_html}

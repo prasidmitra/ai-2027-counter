@@ -1,62 +1,65 @@
 #!/usr/bin/env python3
-"""Generate the favicon set: bold, narrow "NAH" in black on a white square."""
-from PIL import Image, ImageDraw, ImageFont
+"""Generate the favicon set: a thick, block-letter "NAH" stretched to fill the square."""
+import math
+from PIL import Image, ImageDraw
 
-FONT_PATH = '/usr/share/fonts/truetype/ubuntu/UbuntuSans[wdth,wght].ttf'
-FALLBACK = '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf'
-TEXT = 'NAH'
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 
-# Square the text must fit inside (as a fraction of the canvas side).
-FILL = 0.78
+S = 512            # master canvas (px)
+M = 16             # thin white border (px on the master)
+STEM = 52          # stroke thickness
 
 
-def load_font(size: int) -> ImageFont.FreeTypeFont:
-    """Ubuntu Sans, condensed (wdth=75) + extra bold (wght=800), with fallbacks."""
-    try:
-        font = ImageFont.truetype(FONT_PATH, size)
-        axes = font.get_variation_axes()
-        values = []
-        for a in axes:
-            name = a['name']
-            if isinstance(name, bytes):
-                name = name.decode('ascii', 'replace')
-            key = name.lower()
-            if 'width' in key or key == 'wdth':
-                values.append(75)      # condensed
-            elif 'weight' in key or key == 'wght':
-                values.append(800)     # extra bold
-            else:
-                values.append(a['default'])
-        font.set_variation_by_axes(values)
-        return font
-    except Exception:
-        return ImageFont.truetype(FALLBACK, size)
+def thick_segment(p, q, t):
+    """Four corners of a `t`-thick segment from p to q (a parallelogram)."""
+    dx, dy = q[0] - p[0], q[1] - p[1]
+    length = math.hypot(dx, dy) or 1.0
+    nx, ny = -dy / length, dx / length
+    hx, hy = nx * t / 2, ny * t / 2
+    return [
+        (p[0] + hx, p[1] + hy),
+        (p[0] - hx, p[1] - hy),
+        (q[0] - hx, q[1] - hy),
+        (q[0] + hx, q[1] + hy),
+    ]
 
 
-def render(size: int) -> Image.Image:
-    img = Image.new('RGB', (size, size), WHITE)
-    draw = ImageDraw.Draw(img)
+def draw_master() -> Image.Image:
+    img = Image.new('RGB', (S, S), WHITE)
+    d = ImageDraw.Draw(img)
 
-    # Pick the largest font size whose glyphs still fit within FILL of the square.
-    font = None
-    for candidate in range(size, 20, -1):
-        f = load_font(candidate)
-        l, t, r, b = draw.textbbox((0, 0), TEXT, font=f)
-        if (r - l) <= FILL * size and (b - t) <= FILL * size:
-            font = f
-            break
+    top, bottom = M, S - M       # 16, 496
+    H = bottom - top             # 480
+    W = H // 3                   # 160 per letter — letters touch at their edges
+    t = STEM
+    mid = top + H // 2           # vertical center
 
-    l, t, r, b = draw.textbbox((0, 0), TEXT, font=font)
-    w, h = r - l, b - t
-    x = (size - w) / 2 - l
-    y = (size - h) / 2 - t
-    draw.text((x, y), TEXT, fill=BLACK, font=font)
+    x0 = M
+
+    # N — two stems + a top-left -> bottom-right diagonal.
+    nx0 = x0
+    d.polygon(thick_segment((nx0 + t, top), (nx0 + W - t, bottom), t), fill=BLACK)
+    d.rectangle([nx0, top, nx0 + t, bottom], fill=BLACK)
+    d.rectangle([nx0 + W - t, top, nx0 + W, bottom], fill=BLACK)
+
+    # A — vertical legs, a flat top bar, and a crossbar (squared "A").
+    ax0 = x0 + W
+    d.rectangle([ax0, top, ax0 + t, bottom], fill=BLACK)
+    d.rectangle([ax0 + W - t, top, ax0 + W, bottom], fill=BLACK)
+    d.rectangle([ax0, top, ax0 + W, top + t], fill=BLACK)
+    d.rectangle([ax0, mid - t // 2, ax0 + W, mid + t // 2], fill=BLACK)
+
+    # H — two stems + a crossbar.
+    hx0 = x0 + 2 * W
+    d.rectangle([hx0, top, hx0 + t, bottom], fill=BLACK)
+    d.rectangle([hx0 + W - t, top, hx0 + W, bottom], fill=BLACK)
+    d.rectangle([hx0, mid - t // 2, hx0 + W, mid + t // 2], fill=BLACK)
+
     return img
 
 
-master = render(512)
+master = draw_master()
 
 # PNG favicons (LANCZOS-downsampled from the 512px master for crisp edges).
 master.resize((192, 192), Image.LANCZOS).save('apple-touch-icon.png')
