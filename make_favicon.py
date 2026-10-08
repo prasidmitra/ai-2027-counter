@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
-"""Generate the favicon set: a modern white "NAH" wordmark on a black backing."""
+"""Generate the favicon set: white "NAH" on a rounded black squircle."""
 from PIL import Image, ImageDraw, ImageFont
 
 FONT_PATH = '/usr/share/fonts/truetype/ubuntu/UbuntuSans[wdth,wght].ttf'
 FALLBACK = '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf'
 TEXT = 'NAH'
-BLACK = (0, 0, 0)
-WHITE = (255, 255, 255)
+BLACK = (0, 0, 0, 255)
+WHITE = (255, 255, 255, 255)
 
 S = 512            # master canvas (px)
-FILL = 0.78        # fraction of the square the word occupies
+RADIUS = int(S * 0.22)   # corner radius for the rounded square
+FILL = 0.84        # fraction of the square the word occupies
 
 
 def load_font(size: int) -> ImageFont.FreeTypeFont:
@@ -35,8 +36,9 @@ def load_font(size: int) -> ImageFont.FreeTypeFont:
 
 
 def draw_master() -> Image.Image:
-    img = Image.new('RGB', (S, S), BLACK)
+    img = Image.new('RGBA', (S, S), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
+    d.rounded_rectangle([0, 0, S, S], radius=RADIUS, fill=BLACK)
 
     # Largest font whose "NAH" still fits within FILL of the square.
     target = int(S * FILL)
@@ -58,13 +60,15 @@ def draw_master() -> Image.Image:
 
 master = draw_master()
 
-# PNG favicons (LANCZOS-downsampled from the 512px master for crisp edges).
-master.resize((192, 192), Image.LANCZOS).save('apple-touch-icon.png')
+# Browser favicons — transparent rounded corners.
 master.resize((32, 32), Image.LANCZOS).save('favicon-32x32.png')
 master.resize((16, 16), Image.LANCZOS).save('favicon-16x16.png')
-
-# Multi-size .ico for legacy browsers.
 master.save('favicon.ico', format='ICO',
             sizes=[(16, 16), (32, 32), (48, 48), (64, 64)])
+
+# Apple touch icon — iOS ignores transparency, so flatten onto white.
+flat = Image.new('RGB', (S, S), (255, 255, 255))
+flat.paste(master, (0, 0), master)
+flat.resize((192, 192), Image.LANCZOS).save('apple-touch-icon.png')
 
 print('wrote favicon.ico, favicon-16x16.png, favicon-32x32.png, apple-touch-icon.png')
